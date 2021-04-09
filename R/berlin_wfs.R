@@ -3,9 +3,6 @@
 #' @param Geo_path The path where the data has to be stored
 #' @param ... Optional. Columns in the data frame
 #' @return A folder with the data as a geopackage.
-#' @import dplyr
-#' @import ows4R
-#' @importFrom tidyr gather
 #' @export
 #' @examples
 #' \dontrun{
@@ -14,8 +11,6 @@
 
 #### Function
 berlin_wfs <- function(table, Geo_path, ...){ # a data frame is required, with at least a column for the year of data creation and WFS-link
-  library(dplyr)
-  library(ows4R)
 
   base_fun <- function(single_row){ # function, to be applied on each row of input table
     #dat <- single_row
@@ -58,10 +53,10 @@ berlin_wfs <- function(table, Geo_path, ...){ # a data frame is required, with a
     request2    <- sf::st_read(request)
 
     # I need this for the rasterization in the next script
-    col_choose <- names(request2)[menu(c(paste(names(request2), lapply(request2, class), sep = " - ")))]
+    col_choose <- names(request2)[utils::menu(c(paste(names(request2), lapply(request2, class), sep = " - ")))]
     rast_col <- if(rlang::is_empty(col_choose) == TRUE){
       #readline("Set name: ")
-      c("area", "distance", "custom_categorical", "several columns")[menu(c("area", "distance", "custom_categorical", "several columns"),
+      c("area", "distance", "custom_categorical", "several columns")[utils::menu(c("area", "distance", "custom_categorical", "several columns"),
                                                                           title="Choose one?")]
 
     } else{
@@ -86,7 +81,7 @@ berlin_wfs <- function(table, Geo_path, ...){ # a data frame is required, with a
 
     meta_new_row <- data.frame(name, title, title_engl, geo, crs, abstr, date_cr, date_dl, rast_col, source = "FIS-Broker", single_link) # metadata
 
-    write.table(meta_new_row, paste0(subDir, "/", paste("metadata", name, tolower(geo), "berlin", substr(date_cr, 7, 10), unlist(strsplit(crs, ":"))[2], sep = "_"), ".csv"), # (over)writes .csv
+    utils::write.table(meta_new_row, paste0(subDir, "/", paste("metadata", name, tolower(geo), "berlin", substr(date_cr, 7, 10), unlist(strsplit(crs, ":"))[2], sep = "_"), ".csv"), # (over)writes .csv
                 row.names = FALSE, sep = ",", col.names = c("name", "title_ger", "title_eng", "geometry_type", "crs", "abstract",
                                                             "date_of_creation", "date_of_download", "rast_col", "source", "link"))
 
@@ -107,3 +102,8 @@ berlin_wfs <- function(table, Geo_path, ...){ # a data frame is required, with a
 
   print(paste0("Number of error(s): ", error_counter))
 }
+
+#d6raster::berlin_wfs(readr::read_delim("data-raw/test_data_fisbroker.csv", delim = ";"), ".")
+
+
+#devtools::install()
