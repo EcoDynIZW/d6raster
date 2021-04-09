@@ -6,14 +6,14 @@
 #' @export
 #' @examples
 #' \dontrun{
-#' berlin_wfs(table = table, Geo_path = ".")
+#' berlin_wfs2(table = table, Geo_path = ".")
 #' }
 
 #### Function
-berlin_wfs <- function(table, Geo_path, ...){ # a data frame is required, with at least a column for the year of data creation and WFS-link
+berlin_wfs2 <- function(table, Geo_path, ...){ # a data frame is required, with at least a column for the year of data creation and WFS-link
 
   base_fun <- function(data){ # function, to be applied on each row of input table
-    #dat <- single_row
+    data <- as.data.frame(t(data))
     # single_row  <- as.data.frame(t(as.matrix(data))) # preparation step
     # name       <- data$name_eng # starting name for files; in case, please change column (and pay attention to surrogate assignment in a few lines below)
     # title_engl  <- data$name_eng # title in English (translated from whole original title)
@@ -29,8 +29,7 @@ berlin_wfs <- function(table, Geo_path, ...){ # a data frame is required, with a
 
     if(length(layer) > 1) stop(paste0("This function is not suited for WFS-sets with multiple layers. First layer here: ", layer[1]))
 
-    meta_df <- tibble() %>%
-      mutate(name = title_engl,
+    meta_df <- dplyr::tibble(name = data$name_eng,
              title = wfs_client$ # layer title in German
                getCapabilities()$
                findFeatureTypeByName(layer)$
@@ -46,7 +45,7 @@ berlin_wfs <- function(table, Geo_path, ...){ # a data frame is required, with a
     link2$query <- list(service   = "wfs",
                         version   = "2.0.0",
                         request   = "GetFeature",
-                        typenames = typename,
+                        typenames = meta_df$typename,
                         srsName   = paste0("EPSG:", unlist(strsplit(meta_df$crs, ":"))[2])) # applies CRS to shapefile for download
     request     <- sf::st_read(httr::build_url(link2))
 
@@ -62,7 +61,7 @@ berlin_wfs <- function(table, Geo_path, ...){ # a data frame is required, with a
     }
 
     meta_df <- meta_df %>%
-      mutate(geometry_type = as.character(sf::st_geometry_type(request2,
+      dplyr::mutate(geometry_type = as.character(sf::st_geometry_type(request,
                                                      by_geometry = FALSE)),
              abstract = wfs_client$ # abstract
                getCapabilities()$
@@ -75,7 +74,7 @@ berlin_wfs <- function(table, Geo_path, ...){ # a data frame is required, with a
 
 
     mainDir <- Geo_path
-    subDir  <- paste0(mainDir, "/", paste(name, tolower(geo), "berlin", substr(date_cr, 7, 10), unlist(strsplit(crs, ":"))[2], sep = "_"))
+    subDir  <- paste0(mainDir, "/", paste(meta_df$name, tolower(meta_df$geometry_type), "berlin", substr(meta_df$date_of_creation, 7, 10), unlist(strsplit(meta_df$crs, ":"))[2], sep = "_"))
 
     if(!file.exists(subDir)){ # creates new folder per layer
       dir.create(subDir)
@@ -106,7 +105,7 @@ berlin_wfs <- function(table, Geo_path, ...){ # a data frame is required, with a
   print(paste0("Number of error(s): ", error_counter))
 }
 
-#d6raster::berlin_wfs(readr::read_delim("data-raw/test_data_fisbroker.csv", delim = ";"), ".")
+#d6raster::berlin_wfs2(readr::read_delim("data-raw/test_data_fisbroker.csv", delim = ";"), ".")
 
 
 #devtools::install()

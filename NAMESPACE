@@ -2,4 +2,5 @@
 
 export("%>%")
 export(berlin_wfs)
+export(berlin_wfs2)
 importFrom(magrittr,"%>%")
