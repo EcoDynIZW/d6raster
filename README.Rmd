@@ -1,0 +1,36 @@
+---
+output: github_document
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
+# raster.fisbroker
+
+The goal of d6raster is to download wfs data from the fisbroker database 
+
+## Installation
+
+You can install the development version from [GitHub](https://github.com/) with:
+
+``` {r} 
+# install.packages("devtools")
+devtools::install_github("wenzmo/d6raster", force = TRUE)
+```
+## Example
+
+This is a basic example which shows you how to solve a common problem:
+
+```{r example}
+library(d6raster)
+
+berlin_wfs(table = readr::read_delim("test_data_fisbroker.csv", delim = ";"), 
+           Geo_path = ".")
+```
+

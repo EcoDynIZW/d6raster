@@ -1,0 +1,66 @@
+---
+title: "Your Project: Data Preparation" ## name of your project
+author: "Your Name"                     ## your name(s)
+date: "`r Sys.Date()`"                  ## current date
+output:
+  rmdformats::readthedown:
+    code_folding: hide                  ## hide or show code by default?
+    toc_depth: 3                        ## 3-level TOC
+---
+
+```{r setup, include=FALSE}
+## You can ignore this chunk in most cases
+## If you want to modify chunk options, you can do it here for all chunks or
+## add the options in the repsective chunk header, e.g. `{r, message = FALSE}`
+knitr::opts_chunk$set(echo = TRUE, warning = TRUE, message = TRUE,
+                      fig.width = 9, fig.height = 6, dpi = 500, 
+                      retina = 1, fig.showtext = TRUE)
+```
+
+# do not run
+
+```{r}
+install.packages(c("devtools", "roxygen2", "usethis", "available"))
+library(devtools)
+library(roxygen2)
+library(usethis)
+
+library(available)
+available("d6raster")
+
+create_package("C:/Users/wenzler/Documents/GitHub/d6raster")
+```
+
+# github
+
+```{r}
+use_git()
+#use_github()
+usethis::use_git_remote("origin", url = NULL, overwrite = TRUE)
+```
+
+# 
+
+```{r}
+use_mit_license("Moritz Wenzler-Meya")
+use_readme_rmd()
+
+use_travis()
+use_appveyor()
+use_coverage(type = c("codecov"))
+use_testthat()
+use_spell_check()
+use_data_raw()
+```
+
+```{r}
+use_r("berlin_wfs")
+use_test("berlin_wfs")
+
+use_package("dplyr")
+use_package("ows4R")
+
+use_vignette("How_to_do_download_data_from_the_fisbroker_database")
+```
+
+
