@@ -1,4 +1,4 @@
-#' Compute descriptive statistics for the numeric columns of a data frame.
+#' download wfs layer from the fisbroker database.
 #' @param table The data frame where you find the names of the file, the data and the url.
 #' @param Geo_path The path where the data has to be stored
 #' @param ... Optional. Columns in the data frame

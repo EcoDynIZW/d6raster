@@ -19,7 +19,9 @@ Imports:
     httr,
     purrr,
     rlang,
-    sf
+    sf,
+    stringi,
+    readr
 Suggests: 
     testthat (>= 3.0.0)
 Config/testthat/edition: 3

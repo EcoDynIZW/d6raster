@@ -2,7 +2,7 @@
 % Please edit documentation in R/berlin_wfs2.R
 \name{berlin_wfs2}
 \alias{berlin_wfs2}
-\title{Compute descriptive statistics for the numeric columns of a data frame.}
+\title{download wfs layer from the fisbroker database.}
 \usage{
 berlin_wfs2(table, Geo_path, ...)
 }
@@ -17,7 +17,7 @@ berlin_wfs2(table, Geo_path, ...)
 A folder with the data as a geopackage.
 }
 \description{
-Compute descriptive statistics for the numeric columns of a data frame.
+download wfs layer from the fisbroker database.
 }
 \examples{
 \dontrun{
