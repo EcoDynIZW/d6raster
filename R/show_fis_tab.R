@@ -17,3 +17,6 @@ show_fis_tab <- function(x = "./data-raw/fis_broker_wfs_links.csv"){
 
 #show_fis_tab()
 
+#devtools::install()
+
+#d6raster::show_fis_tab()

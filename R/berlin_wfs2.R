@@ -10,15 +10,15 @@
 #' }
 
 #### Function
-berlin_wfs2 <- function(table, Geo_path, ...){ # a data frame is required, with at least a column for the year of data creation and WFS-link
+berlin_wfs2 <- function(table = data.frame(readr::read_delim("./data-raw/fis_broker_wfs_links.csv",
+                                                                           delim = ";")) %>%
+                        dplyr::mutate(name_ger = stringi::stri_encode(name_ger,
+                                                                              from = "ISO-8859-1",
+                                                                              to = "UTF-8")),
+                        Geo_path, ...){ # a data frame is required, with at least a column for the year of data creation and WFS-link
 
   base_fun <- function(data){ # function, to be applied on each row of input table
     data <- as.data.frame(t(data))
-    # single_row  <- as.data.frame(t(as.matrix(data))) # preparation step
-    # name       <- data$name_eng # starting name for files; in case, please change column (and pay attention to surrogate assignment in a few lines below)
-    # title_engl  <- data$name_eng # title in English (translated from whole original title)
-    # date_cr     <- as.character(data$recent_publication) # date of creation; in case, please change column
-    # single_link <- data$link # WFS-link; in case, please change column
 
     wfs_client  <- ows4R::WFSClient$new(data$link, serviceVersion = "2.0.0")
 
@@ -40,7 +40,7 @@ berlin_wfs2 <- function(table, Geo_path, ...){ # a data frame is required, with 
                findFeatureTypeByName(layer)$
                getDefaultCRS()[1]$input,
              date_of_creation = data$recent_publication)
-    #name, title, title_engl, geo, crs, abstr, date_cr, date_dl, rast_col, source = "FIS-Broker", single_link
+
     link2       <- httr::parse_url(data$link)
     link2$query <- list(service   = "wfs",
                         version   = "2.0.0",
@@ -50,10 +50,11 @@ berlin_wfs2 <- function(table, Geo_path, ...){ # a data frame is required, with 
     request     <- sf::st_read(httr::build_url(link2))
 
     # I need this for the rasterization in the next script
-    col_choose <- names(request)[utils::menu(c(paste(names(request), lapply(request, class), sep = " - ")))]
-    rast_col <- if(rlang::is_empty(col_choose) == TRUE){
+    print("Choose one column or type 0 for another option.")
+    col_choose <- c(names(request), "another")[utils::menu(c(paste(names(request), lapply(request, class), sep = " - "), "another"))]
+    rast_col <- if(col_choose == "another"){
       #readline("Set name: ")
-      c("area", "distance", "custom_categorical", "several columns")[utils::menu(c("area", "distance", "custom_categorical", "several columns"),
+      c("area", "distance", "custom_categorical")[utils::menu(c("area", "distance", "custom_categorical"),
                                                                                  title="Choose one?")]
 
     } else{
@@ -72,9 +73,19 @@ berlin_wfs2 <- function(table, Geo_path, ...){ # a data frame is required, with 
              source = "FIS-Broker",
              link = data$link) # date of download (length of 'date()' is always 24 elements))
 
+    print("Do you want to add another column?")
+    if(nrow(meta_df) >= 1){
+      if(c("yes", "no")[utils::menu(c("yes", "no"))] == "yes"){
+        meta_df <- base::rbind(meta_df, meta_df)
+        meta_df[nrow(meta_df), "rast_col"] <-  c(names(request), "another")[utils::menu(c(paste(names(request), lapply(request, class), sep = " - "), "another"))]
+        if(meta_df[nrow(meta_df), "rast_col"] == "another"){
+          meta_df[nrow(meta_df), "rast_col"] <- c("area", "distance", "custom_categorical")[utils::menu(c("area", "distance", "custom_categorical"))]
+        }
+      }
+    }
 
     mainDir <- Geo_path
-    subDir  <- paste0(mainDir, "/", paste(meta_df$name, tolower(meta_df$geometry_type), "berlin", substr(meta_df$date_of_creation, 7, 10), unlist(strsplit(meta_df$crs, ":"))[2], sep = "_"))
+    subDir  <- paste0(mainDir, "/", paste(meta_df$name[1], tolower(meta_df$geometry_type[1]), "berlin", substr(meta_df$date_of_creation[1], 7, 10), unlist(strsplit(meta_df$crs[1], ":"))[2], sep = "_"))
 
     if(!file.exists(subDir)){ # creates new folder per layer
       dir.create(subDir)
@@ -82,12 +93,12 @@ berlin_wfs2 <- function(table, Geo_path, ...){ # a data frame is required, with 
 
     #meta_new_row <- data.frame(name, title, title_engl, geo, crs, abstr, date_cr, date_dl, rast_col, source = "FIS-Broker", single_link) # metadata
 
-    utils::write.table(meta_df, paste0(subDir, "/", paste("metadata", meta_df$name, tolower(meta_df$geometry_type),
-                                                          "berlin", substr(meta_df$date_of_creation, 7, 10), unlist(strsplit(meta_df$crs, ":"))[2], sep = "_"), ".csv"), # (over)writes .csv
+    utils::write.table(meta_df, paste0(subDir, "/", paste("metadata", meta_df$name[1], tolower(meta_df$geometry_type[1]),
+                                                          "berlin", substr(meta_df$date_of_creation[1], 7, 10), unlist(strsplit(meta_df$crs[1], ":"))[2], sep = "_"), ".csv"), # (over)writes .csv
                        row.names = FALSE, sep = ",")
 
-    sf::st_write(request, paste0(subDir, "/", paste(meta_df$name, tolower(meta_df$geometry_type), "berlin",substr(meta_df$date_of_creation, 7, 10),
-                                                    unlist(strsplit(meta_df$crs, ":"))[2], sep = "_"), ".gpkg"), delete_dsn = TRUE) # downloads (overwrites) file
+    sf::st_write(request, paste0(subDir, "/", paste(meta_df$name[1], tolower(meta_df$geometry_type[1]), "berlin",substr(meta_df$date_of_creation[1], 7, 10),
+                                                    unlist(strsplit(meta_df$crs[1], ":"))[2], sep = "_"), ".gpkg"), delete_dsn = TRUE) # downloads (overwrites) file
   }
 
   safely_function <- purrr::safely(base_fun) # skip and save errors, when using this function
@@ -105,7 +116,12 @@ berlin_wfs2 <- function(table, Geo_path, ...){ # a data frame is required, with 
   print(paste0("Number of error(s): ", error_counter))
 }
 
+
+#data <- t(readr::read_delim("data-raw/test_data_fisbroker.csv", delim = ";"))
+
+
 #d6raster::berlin_wfs2(readr::read_delim("data-raw/test_data_fisbroker.csv", delim = ";"), ".")
 
+#d6raster::berlin_wfs2(Geo_path = ".")
 
 #devtools::install()
