@@ -3,5 +3,6 @@
 export("%>%")
 export(berlin_wfs)
 export(berlin_wfs2)
+export(download_fisbroker)
 export(show_fis_tab)
 importFrom(magrittr,"%>%")
